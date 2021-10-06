@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset ="UTF-8">
+	<title>Blackjack</title>
+<style>
+body {
+	background-color: #005F10;
+	z-index: -2;
+	}
+#h {
+	font-family: arial;
+	font-weight: bold;
+	font-size: 30px;
+	left: 400px;
+	top: 30px;
+	position: absolute;
+}
+#stapel{
+	z-index: 0;
+	background-color: #830002;
+    top: 100px;
+    border: 3px solid black;
+    width: 150px;
+    height: 250px;
+    position: absolute;
+	left: 40px;
+}
+#ablage{
+	z-index: -1;
+	background-color: #830002;
+    top: 100px;
+    left: 290px;
+    border: 3px solid black;
+    width: 250px;
+    height: 250px;
+    position: absolute;
+}
+#dealer{
+	z-index: -1;
+	background-color: #830002;
+	top: 100px;
+    left: 590px;
+    border: 3px solid black;
+    width: 250px;
+    height: 250px;
+    position: absolute;
+}
+
+#button{
+	top: 400px;
+	left: 300px;
+	position: absolute;
+}
+.karte{
+	top: 50px;
+	position: absolute; 
+}
+@keyframes rotieren {
+    0%{transform: rotateY(-180deg);}
+    100%{transform: rotateY(0deg);}
+  }
+	#punkte{
+		top: 370px;
+		left: 390px;
+		position: absolute;
+	}
+	#dealerpunkte{
+		top: 370px;
+		left: 690px;
+		position: absolute;
+	}
+	#sPunkte{
+		top: 370px;
+		left: 290px;
+		position: absolute;
+	}
+	#dPunkte{
+		top: 370px;
+		left: 590px;
+		position: absolute;
+	}
+</style>
+<script>
+var pfad = "./deck/";
+bildcounter = 100;
+dealercounter = 100; //neu
+counter = 0;
+
+dealerwert = 0; //neu
+kartenwert = 0;
+	
+kartengesamtwert = 0;
+dealergesamtwert = 0; //neu
+	
+KarteStopt = 580;
+
+
+kartenarray = [];
+for(i=101; i< 153; i++){
+	kartenarray.push(i);
+	}
+	
+function allowDrop(ev) {
+  ev.preventDefault();
+}
+function drag(ev) {
+  ev.dataTransfer.setData("text", ev.target.id);
+}
+function drop(ev) {
+  ev.preventDefault();
+  
+  
+  var data = ev.dataTransfer.getData("text");
+
+	//shuffle - splice Array & random
+	bildcounter = kartenarray.splice(parseInt(Math.random()*kartenarray.length),1);
+	bildcounter = bildcounter[0];
+	
+	if(ev.target.id == "ablage" || ev.target.id == "stapel" ){  
+  
+   
+   
+	  //Animation
+  
+	  document.getElementById(data).style.animationName = "rotieren";
+	  document.getElementById(data).style.webkitAnimationDuration = "0.90s";
+	  document.getElementById(data).style.animationTimingFunction = "linear";
+   
+	  
+   
+	  //Rückseitenbild wird überschrieben mit Vorderseitenbild
+	  document.getElementById(data).src = pfad + bildcounter +".gif";
+	 
+	  kartenwert = Math.min((bildcounter-101) % 13 ,9) + 1; // kartenwerte werden zugewiesen
+		
+		if (kartenwert == 1 && kartengesamtwert < 11){ //ass kann 1 oder 11 sein
+			kartenwert = 11;
+		}
+	  
+	  kartengesamtwert = kartengesamtwert + kartenwert;
+   
+	  document.getElementById("punkte").innerHTML = kartengesamtwert;
+	  document.getElementById(data).setAttribute("kartenwert",kartenwert);
+   
+	  //Karte wird in HTML von einem Stapel auf die Ablage umgehängt 
+	  ev.target.appendChild(document.getElementById(data));
+   
+	  //soll nicht mehr bewegt werden
+	  document.getElementById(data).draggable = false;
+	  
+	  document.getElementById(data).style.left = 50 + counter*30 + "px"; // karte versetzt angezeigt
+	  counter++;
+  }
+	else{
+		alert("Die Karte daneben legen :)");
+	} 
+}
+
+	function Sleep(milliseconds) { // sleep 
+		return new Promise(resolve => setTimeout(resolve, milliseconds));
+	}
+
+	var id = null;
+	var pos1 = 100;
+	var karte = 1;
+	
+	async function kartebewegt(){
+		if (kartengesamtwert == 0){
+			alert("Du musst mindestens eine Karte ziehen.")
+		} else{
+		var elem1 = document.getElementById(karte);
+		var x = document.getElementById("myBtn"); 
+		x.disabled = true;
+	
+		dealercounter = kartenarray.splice(parseInt(Math.random()*kartenarray.length),1,); 
+		dealercounter = dealercounter[0];
+
+	
+		document.getElementById(karte).style.animationName = "rotieren";
+		document.getElementById(karte).style.webkitAnimationDuration = "0.90s";
+    	document.getElementById(karte).style.animationTimingFunction = "linear";
+		document.getElementById(karte).src = pfad + dealercounter +".gif";
+			
+			
+		dealerwert = Math.min((dealercounter -101) % 13 ,9) + 1; 
+		if (dealerwert == 1 && dealergesamtwert < 11){
+			dealerwert = 11;
+		}
+	
+		
+		dealergesamtwert = dealergesamtwert + dealerwert; 
+		
+		document.getElementById("dealerpunkte").innerHTML = dealergesamtwert;	
+		
+		clearInterval(id);
+		id = setInterval(frame, 1);
+		function frame() {
+			if (pos1 == KarteStopt) {
+				clearInterval(id);
+			} else {
+				pos1++;
+				
+		
+     
+				elem1.style.left = pos1 + 'px';
+	  
+			}
+		}
+
+		await Sleep(2500);
+	
+	if (dealergesamtwert < 17){
+		karte++;
+		pos1 = 100;
+		KarteStopt = KarteStopt + 30;
+		kartebewegt();
+	}	else{
+			
+			if (kartengesamtwert > 21 && dealergesamtwert < 22){
+				alert("BUST! Du hast verloren! :(")
+			}
+			if (kartengesamtwert < 21 && dealergesamtwert > 21){
+				alert("Dealer BUST! Du hast gewonnen! :D");
+			}
+			if (kartengesamtwert == dealergesamtwert){
+				alert("DRAW! Unentscheiden. ");
+			}
+			if (kartengesamtwert > 21 && dealergesamtwert > 21){
+				alert("Beide BUST! Unentschieden. ");
+			}
+			if (kartengesamtwert == 21 && dealergesamtwert !== 21){
+				alert("BlackJack! Du hast gewonnen! :D");
+			}
+			if (kartengesamtwert > dealergesamtwert && kartengesamtwert < 21){
+				alert("WIN! Du hast gewonnen! :D");
+			}
+			if (dealergesamtwert > kartengesamtwert && dealergesamtwert < 22){
+				alert("LOSE! Du hast verloren! :(");
+			}
+				
+			var ok = confirm("Nochmal spielen?");
+					if (ok == true) {
+						location.reload();
+					}
+			}
+	
+	}
+	}
+		
+</script>
+    </head>
+<body>
+
+  <div id="h">
+    Blackjack
+  </div>
+
+  <div id="stapel" >
+    Stapel:
+    <img class="karte" id="1" src="./deck/100.gif" alt="rückseite" draggable="true" ondragstart="drag(event)">
+	<img class="karte" id="2" src="./deck/100.gif" alt="rückseite" draggable="true" ondragstart="drag(event)">
+	<img class="karte" id="3" src="./deck/100.gif" alt="rückseite" draggable="true" ondragstart="drag(event)">
+	<img class="karte" id="4" src="./deck/100.gif" alt="rückseite" draggable="true" ondragstart="drag(event)">
+	<img class="karte" id="5" src="./deck/100.gif" alt="rückseite" draggable="true" ondragstart="drag(event)">
+	<img class="karte" id="6" src="./deck/100.gif" alt="rückseite" draggable="true" ondragstart="drag(event)">
+	<img class="karte" id="7" src="./deck/100.gif" alt="rückseite" draggable="true" ondragstart="drag(event)">
+	<img class="karte" id="8" src="./deck/100.gif" alt="rückseite" draggable="true" ondragstart="drag(event)">
+	<img class="karte" id="9" src="./deck/100.gif" alt="rückseite" draggable="true" ondragstart="drag(event)">
+	  
+	
+  </div>
+
+  <div id="ablage" ondrop="drop(event)" ondragover="allowDrop(event)">
+    Ablage:
+  </div>
+	<div id="dealer">
+	Dealer:
+	</div>
+	<div id="dealerpunkte">
+		
+		</div>
+  <div id="punkte">
+	  
+	</div>
+	<div id="sPunkte">
+		Spielerpunkte:
+	</div>
+	<div id="dPunkte">
+		Dealerpunkte:
+	</div>
+	<div id="button">
+		<button type="button" id="myBtn" onclick="kartebewegt()">fold</button>
+	</div>
+  
+</body>
+
+</html>
